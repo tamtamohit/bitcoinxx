@@ -1,0 +1,75 @@
+{% extends 'layout.html' %}
+
+{% block head %}
+    <script>
+        function calculatebtc(){
+            var amount = document.getElementById("amount").value;
+            var priceBTC = document.getElementById("priceBTC").innerHTML;
+            console.log(amount/priceBTC)
+            document.getElementById("blah").value = amount/priceBTC ;
+        }
+
+        function renew_btc_value(){
+            var upgraded_btc_value = document.getElementById("new_btc_value").value;
+            document.getElementById("priceBTC").innerHTML = upgraded_btc_value ;
+            calculatebtc();
+            console.log(upgraded_btc_value)
+        }
+
+        function fromBTCtoRupees(){
+            var bitcoin = document.getElementById("blah").value;
+            var priceBTC = document.getElementById("priceBTC").innerHTML;
+            document.getElementById("amount").value = bitcoin * priceBTC ;
+        }
+    </script>
+{% endblock%}
+
+
+
+{% block content %}
+<div>
+    <div>
+        <p>Account Balance: {{account_balance}} <i class="fa fa-inr"></i> </p>
+    </div>
+    <div>
+        <form action="/buybtc" method="post">
+            <span class="currencyinput">On <i class="fa fa-inr"></i> <input type="number" name="amount" id="amount" oninput="calculatebtc()" min="0" max="{{account_balance}}" step=0.01></span>
+            <span class="bitcoininput">You can Buy <i class="glyphicon glyphicon-bitcoin"></i><input name="volumeBitcoins" type="number" id="blah" oninput="fromBTCtoRupees()" step=0.0000000001></span>
+            <p><span name="price" id="priceBTC">{{price_per_bitcoin}}</span>
+
+            <!-- Button trigger modal -->
+            <a class="k-spacing-left--large" data-toggle="modal" data-target="#myModal">
+              Change Base Price of Bitcoin
+            </a>
+            </p>
+            <!-- Modal -->
+            <!-- Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Change Bitcoin Buying Value</h4>
+                  </div>
+                  <div class="modal-body">
+                      <div class="input-group">
+                          <span class="input-group-addon" id="basic-addon1">B</span>
+                          <input type="number" name="price" class="form-control" id="new_btc_value" value="{{price_per_bitcoin}}" aria-describedby="basic-addon1" min="0">
+                        </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="change_btc_MRP" onclick="renew_btc_value()" data-dismiss="modal">Save changes</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" >Submit</button>
+        <!--<p id="blah"></p>-->
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+
+

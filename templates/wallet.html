@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+
+{% block content %}
+    <div>
+        <div class="account-balance">
+            <h3>Account Balance</h3>
+            <p class="k-spacing-right--large">         <i class="fa fa-inr"></i><span>     {{account['account_balance']}}</span></p>
+        </div>
+        <div class="account-btc">
+            <h3>Bitcoin</h3>
+            <p class="k-spacing-right--small">         <i class="glyphicon glyphicon-btc"></i><span>    {{account['bitcoins']}}</span></p>
+        </div>
+    </div>
+{% endblock %}

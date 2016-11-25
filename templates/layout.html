@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <title>BTCXIndia</title>
+    <meta content="width=device-width,initial-scale=1" name=viewport>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename= 'images/favicon.png') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.5.0/css/bootstrap-slider.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.5.0/bootstrap-slider.js"></script>
+    <style>
+
+           .k-spacing-left--large { margin-left: 40px !important;}
+          .k-spacing-right--small { margin-right: 20px !important;}
+          .k-spacing-right--large { margin-right: 40px !important;}
+          .k-spacing-bottom--large {margin-bottom: 0px !important;}
+          .k-spacing-top--large {margin-top: 40px !important;}
+          .k-inline-block {display: inline-block !important;}
+          * { -webkit-box-sizing : boeder box; box-sizing : border-box;}
+          .footer {clear: both; position: relative;}
+      </style>
+    {% block head %}
+    {% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-default navbar-fat navbar-clean">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a href="#" class="navbar-brand">
+                    <img src="{{ url_for('static',filename='images/favicon.png')}}" style="max-width:120px; margin-top:-7px; margin-left: 30px;">
+                </a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right" role="tablist">
+                    <li role="presentation" class="active" ><a href="/home">Home</a></li>
+                    <li class="hidden-xs hidden-sm"><a>•</a></li>
+                    <li role="presentation"><a href="">Live Market</a></li>
+                    <li class="hidden-xs hidden-sm"><a>•</a></li>
+                    <li><a href="/wallet">Wallet</a></li>
+                    <li class="hidden-xs hidden-sm"><a>•</a></li>
+                    <li><a href="/trade">Trade</a></li>
+                    <li class="hidden-xs hidden-sm"><a>•</a></li>
+                    <li><a href="">Transaction</a></li>
+                    <li class="hidden-xs hidden-sm"><a>•</a></li>
+                    <li><a href="/login">Sign In</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% block content %}{% endblock %}
+
+    <footer>
+        <div class="container-fluid footer" style="margin-left:5%; margin-right:5%">
+            <div class="row">
+                <div class="col-sm-3">
+                    <h4>Know More</h4>
+                    <div class="footerDv">
+                        <p class="k-paragraph--small k-link--blue k-spacing-right--large k-spacing-bottom--large">About Us</p>
+                        <p class="k-paragraph--small k-link--blue k-spacing-right--large k-spacing-bottom--large">API</p>
+                        <p class="k-paragraph--small k-link--blue k-spacing-right--large k-spacing-bottom--large">Blog</p>
+                        <p class="k-paragraph--small k-link--blue k-spacing-right--large k-spacing-bottom--large">FAQ</p>
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <h4>Notifications</h4>
+                    <div class="footrDv">
+                        <ul style="list-style: none;">
+                            {% for t in TOPIC_DICT["notification"] %}
+                                <li style="margin-left:-7px;">{{t[0]}}    {{t[1]}}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <h4>Contact Us</h4>
+                    <div class="footerDv">
+                        <p class="k-spacing-bottom--large"><b>Address:</b> BTCXIndia, Dno:1-55/6A/125/MH/101, Sai Prithvi Enclave, Kalajyothi Printers Road, Kondapur, Hyderabad-500084.</p>
+                        <p class="k-spacing-bottom--large"><b>Phone:</b> 040-64500999</p>
+                        <p class="k-spacing-bottom--large"><b>Email:</b> support@btcxindia.com</p>
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <h4>Follow Us</h4>
+                    <div class="footerDv">
+                        <p class="k-spacing-bottom--large">
+                            <a><i class="fa fa-facebook k-inline-block k-link--blue k-spacing-right--small" style="font-size:24px"></i></a>
+                            <a><i class="fa fa-twitter k-inline-block k-link--blue k-spacing-right--small" style="font-size:24px"></i></a>
+                            <a><i class="fa fa-linkedin k-inline-block k-link--blue k-spacing-right--small" style="font-size:24px"></i></a>
+                            <a><i class="fa fa-reddit k-inline-block k-link--blue k-spacing-right--small" style="font-size:24px"></i></a>
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </footer>
+
+    {% block javascript %}
+    {% endblock %}
+</body>
+</html>

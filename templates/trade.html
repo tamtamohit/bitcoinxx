@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+
+
+
+
+{% block content %}
+    <div>
+        <div class="col-md-4">
+            <section class="panel panel-default" style=" border: 1px solid #fff;">
+                <h2>Live Order</h2>
+                <table class="table">
+                    <thread>
+                        <tr>
+                            <th>
+                                <div align="center">Buyers</div>
+                            </th>
+                            <th>
+                                <div align="center">Seller</div>
+                            </th>
+                        </tr>
+                    </thread>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <table class="table">
+                                    <thread>
+                                        <tr>
+                                            <th>
+                                                <div align="center">Volume</div>
+                                            </th>
+                                            <th>
+                                                <div align="center">Price per BTC</div>
+                                            </th>
+                                        </tr>
+                                    </thread>
+                                    <tbody>
+                                        {% for topic in TOPIC_DICT['buyers'] %}
+                                            <tr>
+                                                <td>
+                                                    <div align="center">{{topic['bitcoins']}}</div>
+                                                </td>
+                                                <td>
+                                                    <div align="center">{{topic['price']}}</div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </td>
+                            <td>
+                                <table class="table">
+                                    <thread>
+                                        <tr>
+                                            <th>
+                                                <div align="center">Volume</div>
+                                            </th>
+                                            <th>
+                                                <div align="center">Price per BTC</div>
+                                            </th>
+                                        </tr>
+                                    </thread>
+                                    <tbody>
+                                        {% for topic in TOPIC_DICT['sellers'] %}
+                                            <tr>
+                                                <td>
+                                                    <div align="center">{{topic['bitcoins']}}</div>
+                                                </td>
+                                                <td>
+                                                    <div align="center">{{topic['price']}}</div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+
+                                </table>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+        </div>
+
+
+        <div class="col-md-4">
+            <h2>Trade History</h2>
+            <table class="table table-hover">
+
+                <tbody>
+                    {% for topic in TOPIC_DICT['trades'] %}
+                        <tr>
+                            <td>{{ topic['time'] }}</td>
+                            <td>{{topic['volume']}} BTC @  <i class="fa fa-inr"></i> {{topic['price']}} </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+
+        <div class="col-md-4">
+            <h2>My Pending Order</h2>
+            <table class="table table-hover">
+                <tbody>
+                    {% for orders in PENDING_ORDERS['selling'] %}
+                        <tr>
+                            <td>Selling</td>
+                            <td>{{orders['bitcoins']}} BTC @ <i class="fa fa-inr"></i> {{orders['price']}}</td>
+                        </tr>
+                    {% endfor %}
+                    {% for orders in PENDING_ORDERS['buying'] %}
+                        <tr>
+                            <td>Buying</td>
+                            <td>{{orders['deposit'] / orders['price']}} BTC @ <i class="fa fa-inr"></i> {{orders['price']}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

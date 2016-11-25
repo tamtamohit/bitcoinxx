@@ -1,0 +1,101 @@
+{% extends "layout.html" %}
+
+{% block head%}
+    <script>
+        function calculatebtc(){
+            var btc_to_sold = document.getElementById("slider").value;
+            document.getElementById("SliderVal").innerHTML = btc_to_sold;
+            document.getElementById("SellingBitcoin").innerHTML = btc_to_sold;
+            var priceperbitcoin = document.getElementById("priceperbitcoin").value;
+            document.getElementById("TotalAmount").innerHTML = btc_to_sold * priceperbitcoin;
+        }
+
+        function changeinValue(){
+            var priceperbitcoin = document.getElementById("priceperbitcoin").value;
+            var btc_to_sold = document.getElementById("slider").value;
+            document.getElementById("PriceBitcoin").innerHTML = priceperbitcoin
+            document.getElementById("TotalAmount").innerHTML = btc_to_sold * priceperbitcoin;
+        }
+
+        function finalizingSell(){
+            var btc_to_sold = document.getElementById("slider").value;
+            var priceperbitcoin = document.getElementById("priceperbitcoin").value;
+            document.getElementById("btcSellingVolumeConfirm").value = btc_to_sold;
+            document.getElementById("btcSellingPriceConfirm").value = priceperbitcoin;
+        }
+
+
+    </script>
+
+{% endblock %}
+
+{% block content %}
+    <div class="mybtc">
+
+        <div>
+            <h1>Sell Bitcoins</h1>
+        </div>
+        <form action="/sellbtc" method="post">
+            <div class="input-group input-group-lg k-spacing-top--large"></div>
+                <input
+                        id="slider"
+                    type="text"
+                    name="btcSellingVolume"
+                    data-provide="slider"
+                    data-slider-min="0.000000001"
+                    data-slider-max="{{person_account_details}}"
+                    data-slider-step="0.001"
+                    data-slider-value="{{person_account_details}}"
+                        data-slider-tooltip="always"
+                        onchange="calculatebtc()"
+
+                >
+                <span id="CurrentSliderValLabel" class="k-spacing-left--large">Selling Bitcoins: <span id="SliderVal">{{person_account_details}}</span></span>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="input-group input-group-lg">
+                      <span class="input-group-addon" id="sizing-addon1"><i class="fa fa-inr"></i>/<i class="glyphicon glyphicon-bitcoin"></i></span>
+                      <input name="btcSellingPrice" id="priceperbitcoin" type="number" class="form-control" placeholder="Amount" aria-describedby="sizing-addon1" value="{{price_per_bitcoin}}" oninput="changeinValue()">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span id="Total Amount"><span id="SellingBitcoin">{{person_account_details}}</span><i class="glyphicon glyphicon-bitcoin"></i> @ <span id="PriceBitcoin">{{price_per_bitcoin}}</span> <i class="fa fa-inr"></i> will give you <span id="TotalAmount"> {{ person_account_details * price_per_bitcoin }}</span> <i class="fa fa-inr"></i></span>
+            </div>
+            <button type="submit" class="btn btn-primary" id="change_btc_MRP" >Submit</button>
+        </form>
+
+
+        <!--&lt;!&ndash; Button trigger modal &ndash;&gt;-->
+        <!--<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal" onclick="finalizingSell()">-->
+          <!--Confirm-->
+        <!--</button>-->
+        <!--&lt;!&ndash; Modal &ndash;&gt;-->
+        <!--&lt;!&ndash; Modal &ndash;&gt;-->
+        <!--<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">-->
+          <!--<div class="modal-dialog" role="document">-->
+            <!--<div class="modal-content">-->
+              <!--<div class="modal-header">-->
+                <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>-->
+                <!--<h4 class="modal-title" id="myModalLabel">Change Bitcoin Buying Value</h4>-->
+              <!--</div>-->
+                <!--<form id="bidBitcoin" action="/sellbtc" method="post">-->
+                  <!--<div class="modal-body">-->
+                      <!--<div class="input-group">-->
+                          <!--<input type="text" class="form-control" name="btcSellingVolumeConfirm" id="btcSellingVolumeConfirm" aria-describedby="basic-addon1">-->
+                          <!--<input type="text" class="form-control" name="btcSellingPriceConfirm" id="btcSellingPriceConfirm" aria-describedby="basic-addon1">-->
+                          <!--<button type="submit" class="btn btn-primary" id="change_btc_MRP" >Submit</button>-->
+                      <!--</div>-->
+                  <!--</div>-->
+                  <!--<div class="modal-footer">-->
+                  <!--</div>-->
+                <!--</form>-->
+            <!--</div>-->
+          <!--</div>-->
+        <!--</div>-->
+
+    </div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<style>
+    .content {
+        width:60%;
+        margin:auto;
+        margin-top:2%;
+    }
+
+    #login {
+    width:100%;
+    height:100px;
+    }
+
+    #buttons {
+    height:100px;
+    background: #2c3e50;
+    }
+
+    #buttons > p {
+    width : 50%;
+    height: 50%;
+    float:left;
+    color: white;
+    text-align:center;
+    padding-top: 20px;
+    margin:0;
+    }
+
+    #buttons > p:hover {
+    background: #e67e22;
+    color: #2c3e50;
+    cursor: pointer;
+    }
+
+    #signup {
+    background: #2c3e50;
+    }
+
+    #signup > input , #signup > button {
+    margin-left: 250px;
+    margin-top: 10px;
+    }
+
+    #first, #last, #email {
+    width: 280px;
+    }
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="content">
+
+    <div id="buttons">
+        <p id="loginbutton">Login</p>
+        <p id="signupbutton">Sign Up</p>
+    </div>
+    <div id="signup">
+        <form method="post" action="/login">
+            <input type="text" name="email" id="email" placeholder="Email">
+            <input type="password" name="password" id="password" placeholder="Password">
+            <input type="submit" name="send" id="send" value="SignIn">
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block javascript %}
+    <script type="text/javascript">
+        {% include "login.js" %}
+    </script>
+{% endblock %}

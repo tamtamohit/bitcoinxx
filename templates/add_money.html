@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+
+{% block content %}
+
+    <div class="bitcoinmachine">
+        <form action="/addmoney" method="post">
+            <h1>Add Money</h1>
+            <input type="text" placeholder="Add Money" name="amount">
+            <input type="submit" name="payment" value="Pay">
+            <input type="submit" name="payment" value="Skip">
+        </form>
+    </div>
+
+{% endblock %}
