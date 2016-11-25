@@ -2,10 +2,10 @@
 
 """
 from pymongo import MongoClient
-collection_trade = MongoClient()['__init__'].trades
-collection_seller = MongoClient()['__init__'].seller_database
-collection_buyer = MongoClient()['__init__'].buyers_database
-collection_account = MongoClient()['__init__'].account
+collection_trade = MongoClient()['app'].trades
+collection_seller = MongoClient()['app'].seller_database
+collection_buyer = MongoClient()['app'].buyers_database
+collection_account = MongoClient()['app'].account
 
 def content(trade=False):
     basics = {"notification":[['BTC withdrawal timing has been reduced from 30 minutes to 10 minutes.','08-10-2016 12:33'],

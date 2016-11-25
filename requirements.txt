@@ -20,4 +20,4 @@ python-docx==0.8.5
 requests==2.5.3
 virtualenv==15.0.2
 bson==0.4.3
-
+gunicorn==19.6.0

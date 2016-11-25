@@ -4,10 +4,12 @@ import time, datetime
 from random import randint
 from exceptions import Exception
 
-collection_trade = MongoClient()['__init__'].trades
+
+
+collection_trade = MongoClient()['app'].trades
 '''
 '''
-collection_seller = MongoClient()['__init__'].seller_database
+collection_seller = MongoClient()['app'].seller_database
 '''
 {
 	"_id" : ObjectId("5834d009f99ce64b5a9b213f"),
@@ -19,7 +21,7 @@ collection_seller = MongoClient()['__init__'].seller_database
 }
 '''
 
-collection_buyer = MongoClient()['__init__'].buyers_database
+collection_buyer = MongoClient()['app'].buyers_database
 '''
 {
 	"_id" : ObjectId("5834d009f99ce64b5a9b213f"),
@@ -31,7 +33,7 @@ collection_buyer = MongoClient()['__init__'].buyers_database
 }
 '''
 
-collection_account = MongoClient()['__init__'].account
+collection_account = MongoClient()['app'].account
 '''
 {
     "_id" : ObjectId("582ec573f99ce6291025082c"),
