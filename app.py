@@ -4,13 +4,8 @@ Flask API run file
 """
 from flask import Flask, render_template, request, redirect,flash, session
 from pymongo.errors import DuplicateKeyError
-# from flask_login import LoginManager,login_user, logout_user, current_user, login_required
 from content_management import content
 from flask_pymongo import PyMongo
-from itsdangerous import URLSafeTimedSerializer
-from wtforms import Form, BooleanField, StringField, PasswordField, validators
-from User import User
-import datetime, time
 from bson.objectid import ObjectId
 from market import buyer,seller
 
