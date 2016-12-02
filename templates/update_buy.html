@@ -21,21 +21,36 @@
             var priceBTC = document.getElementById("priceBTC").innerHTML;
             document.getElementById("amount").value = bitcoin * priceBTC ;
         }
+
+        function valueFromSellers(rowloop){
+            var bitcoin = document.getElementById('bitcoin-'.concat(rowloop)).innerHTML;
+            var upgraded_btc_value = document.getElementById('price-'.concat(rowloop)).innerHTML;
+            var amount = bitcoin * upgraded_btc_value;
+            document.getElementById('blah').value = bitcoin;
+            document.getElementById("priceBTC").innerHTML = upgraded_btc_value ;
+            document.getElementById("new_btc_value").value = upgraded_btc_value ;
+            document.getElementById('amount').value = amount;
+        }
     </script>
-
-
-{% endblock%}
+    <style>
+        .clickable {
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
 
 
 
 {% block content %}
-    <div >
+    <div>
+        <h1 align="center">Buyers Block</h1>
         <div class="col-md-6">
             <h4>Account Balance: <mark>{{account_balance}}</mark> <i class="fa fa-inr"></i> </h4>
-
-            <form action="/buybtc" method="post">
-                <span class="currencyinput">On <i class="fa fa-inr"></i> <input type="number" name="amount" id="amount" oninput="calculatebtc()" min="0" max="{{account_balance}}"  step=0.01></span>
-                <span class="bitcoininput">You can Buy <i class="glyphicon glyphicon-bitcoin"></i><input name="volumeBitcoins" type="number" id="blah" oninput="fromBTCtoRupees()" step=0.0000000001></span>
+        <!--</div>-->
+        <!--<div class="col-md-6">-->
+            <form action="/updatebuy" method="post">
+                <span class="currencyinput">On <i class="fa fa-inr"></i> <input type="number" name="amount" id="amount" oninput="calculatebtc()" min="0" max="{{account_balance}}" value="{{PENDING_ORDER['deposit']}}" step=0.01></span>
+                <span class="bitcoininput">You can Buy <i class="glyphicon glyphicon-bitcoin"></i><input name="volumeBitcoins" type="number" id="blah" oninput="fromBTCtoRupees()" step="0.001" min="0" value="{{ PENDING_ORDER['deposit'] / price_per_bitcoin }}"></span>
                 <p><span name="price" id="priceBTC">{{price_per_bitcoin}}</span> Price/Bitcoin
 
                 <!-- Button trigger modal -->
@@ -65,41 +80,38 @@
                     </div>
                   </div>
                 </div>
-                <button type="submit" class="btn btn-primary" >Submit</button>
+                <button name="button" type="submit" class="btn btn-primary" value="update" >Update</button>
+                <button name="button" type="submit" class="btn btn-danger" value="cancel" >Cancel</button>
             <!--<p id="blah"></p>-->
             </form>
         </div>
-    </div>
-    <div class="col-md-6">
-        <h3>Sellers</h3>
-        <table class="table">
-            <thread>
-                <tr>
-                    <th>
-                        <div align="center">Volume </div>
-                    </th>
-                    <th>
-                        <div align="center">Price per BTC</div>
-                    </th>
-                </tr>
-            </thread>
-            <tbody>
-                {% for topic in TOPIC_DICT['sellers'] %}
-                    <tr class="clickable">
-                        <td>
-                            <div align="center">{{topic['bitcoins']}}</div>
-                        </td>
-                        <td>
-                            <div align="center">{{topic['price']}}</div>
-                        </td>
+        <div class="col-md-6" align="right">
+            <h3 align="center">Sellers</h3>
+            <table class="table table-hover">
+                <thread>
+                    <tr>
+                        <th>
+                            <div align="center">Volume</div>
+                        </th>
+                        <th>
+                            <div align="center">Price per BTC</div>
+                        </th>
                     </tr>
-                {% endfor %}
-            </tbody>
-
-        </table>
+                </thread>
+                <tbody>
+                    {% for topic in TOPIC_DICT['sellers'] %}
+                        {% set rowloop = loop %}
+                        <tr class="clickable" onclick="valueFromSellers({{rowloop.index}})">
+                            <td>
+                                <div align="center" id="bitcoin-{{ rowloop.index }}">{{topic['bitcoins']}}</div>
+                            </td>
+                            <td>
+                                <div align="center" id="price-{{ rowloop.index }}">{{topic['price']}}</div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-
 {% endblock %}
-
-
-

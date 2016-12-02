@@ -81,44 +81,71 @@ def create_key():
 
 
 
+def trade_history(bitcoins,price,buyers_transaction_id,sellers_transaction_id):
+    """
+    {
+        time: date_time,
+        bitcoins: ,
+        price: ,
+        transaction_id:
+    }
+    :return:
+    """
+    trader_doc = {
+        'time': st(),
+        'bitcoins': bitcoins,
+        'price': price,
+        'buyers_transaction_id': buyers_transaction_id,
+        'sellers_transaction_id': sellers_transaction_id
+    }
+    collection_trade.insert(trader_doc)
+    return
+
+
+
 
 
 class buyer:
-    def __init__(self,userId,price_per_btc,transact_amount):
-        self.userId = userId
+    def __init__(self,userId,price_per_btc,transact_amount,transaction_id=None):
+        self.userId = str(userId)
         self.price_per_btc = float(price_per_btc)
         self.transact_amount = float(transact_amount)
         self.bitcoins = float(transact_amount)/float(price_per_btc)
         self.st = st()
-        self.transaction_id = userId + create_key()
-    def deduct_money(self):
+        if transaction_id == None:
+            self.transaction_id = userId + create_key()
+            self.update = False
+        else:
+            self.transaction_id = transaction_id
+            self.update = True
+    def deduct_money(self,transact_amount):
         # print self.transact_amount
-        collection_account.update({'_id':ObjectId(self.userId)},{'$inc':{'account_balance':-self.transact_amount}})
+        collection_account.update({'_id':ObjectId(self.userId)},{'$inc':{'account_balance':-transact_amount}})
 
     # def transfer_money_to_seller(self,sellers_user_id, transfered_money, bitcoins, transaction_id, price_per_btc):
 
-    def transfer_money_to_seller(self,seller,seller_ka_paisa,mera_paisa):
+    def transfer_money_to_seller(self,seller_data,seller_ka_paisa,mera_paisa):
         '''
         paisa de do bitcoin ka
         '''
         remaning_money = seller_ka_paisa - mera_paisa
         print mera_paisa, self.price_per_btc
         bitcoin_purchased = float(mera_paisa)/float(self.price_per_btc)
-        seller_account_info = collection_account.find_one({'_id':ObjectId(seller['user'])})
+        seller_account_info = collection_account.find_one({'_id':ObjectId( seller_data['user'])})
         pending_orders = seller_account_info['pending_orders']
         for num, order in enumerate(pending_orders['selling']):
-            if order['transaction_id'] == seller['transaction_id']:
-                if remaning_money == 0:
-                    pending_orders['selling'].pop(num)
+            if order['transaction_id'] ==  seller_data['transaction_id']:
+                if remaning_money == 0 or remaning_money < 0.000000001:
+                    pending_orders['selling'] = []
                     print pending_orders
                 elif remaning_money > 0:
-
                     # collection_buyer reduce bitcoins
                     order['bitcoins'] -= bitcoin_purchased
 
-        collection_account.update({'_id':ObjectId(seller['user'])},{
+        collection_account.update({'_id':ObjectId( seller_data['user'])},{
             '$inc' : {
-                'account_balance' : mera_paisa
+                'account_balance' : mera_paisa,
+                'bitcoins' : -bitcoin_purchased
             },
             '$set' : {
                 'pending_orders' : pending_orders
@@ -126,48 +153,30 @@ class buyer:
             '$push' : {
                 'account_history.sold' : {
                     'bitcoins': bitcoin_purchased,
-                    'transaction_id' : seller['transaction_id'],
+                    'transaction_id' :  seller_data['transaction_id'],
                     'money_recived' : mera_paisa
                 }
             }
         })
-        print 'here'
+        # print 'here'
         print remaning_money
-        if remaning_money == 0:
-            print 'here'
-            collection_seller.remove({'transaction_id':seller['transaction_id']})
+        if remaning_money == 0 or remaning_money < 0.000000001:
+            collection_seller.remove({'transaction_id': seller_data['transaction_id']})
         elif remaning_money > 0:
-            print 'here'
-            print seller['transaction_id']
-            print collection_seller.find_one({'transaction_id': seller['transaction_id']})
-            print bitcoin_purchased
-            collection_seller.update({'transaction_id':seller['transaction_id']},{
+            collection_seller.update({'transaction_id': seller_data['transaction_id']},{
                 '$inc' : {
                     'bitcoins' : -bitcoin_purchased
                 }
             })
+        self.deduct_money(transact_amount=mera_paisa)
+
+        trade_history(bitcoins=bitcoin_purchased,price=self.price_per_btc,
+                      buyers_transaction_id=self.transaction_id,sellers_transaction_id= seller_data['transaction_id'])
 
 
-        #get account info
-        #paisa deduct karo aur isko de do
-        # seller_ask_price_total = seller['bitcoins'] * self.price_per_btc
-        # if seller_ask_price_total
-    # def look_for_selles(price_per_btc, bitcoins, userId, transferd_money):
+
+
     def market_processing_for_buyer(self):
-        '''
-        look for price match
-        if price mached:
-            condition 1: number of bitcoins available >= bitcoins asked for
-                transfer_money_to_seller
-                add bitcoins to account of buyer
-            condition 2: number of bitcoins available < bitcoins asked for
-                take available bit coins
-                transfer money to seller
-                look for another seller
-        :param price_per_btc:
-        :param bitcoins:
-        :return:
-        '''
         buyers_record = {
             "user": self.userId,
             "price": self.price_per_btc,
@@ -175,26 +184,31 @@ class buyer:
             "transaction_id": self.transaction_id,
             'deposit': self.transact_amount
         }
-        seller = collection_seller.find_one({'price': self.price_per_btc,
-                                             'user':{'$ne':self.userId}})
-
-        # exit()
-        if seller == None:
+        seller_data  = collection_seller.find_one({'price': self.price_per_btc,
+                                             'user':{'$ne':str(self.userId)}})
 
 
-            collection_buyer.insert(buyers_record)
-            del buyers_record['user']
-            collection_account.update({'_id':ObjectId(self.userId)},{'$push':{
-                'pending_orders.buying' : buyers_record
-            }})
-            print 'Written on database'
-            # print 'yes'
+        if seller_data == None:
+            if self.update == False:
+                collection_buyer.insert(buyers_record)
+                del buyers_record['user']
+                collection_account.update({'_id':ObjectId(self.userId)},{'$push':{
+                    'pending_orders.buying' : buyers_record
+                }})
+                print 'Written on database'
+            else:
+                collection_buyer.update({'transaction_id':self.transaction_id},{
+                    '$set': buyers_record
+                })
+                del buyers_record['user']
+                collection_account.update({'_id': ObjectId(self.userId)}, {'$set': {
+                    'pending_orders.buying': [buyers_record]
+                }})
         else:
-            seller_ask_total_money = seller['bitcoins'] * self.price_per_btc
+            seller_ask_total_money =  seller_data ['bitcoins'] * self.price_per_btc
             if seller_ask_total_money >= self.transact_amount:
-                # do the transaction
-                # transfer_money_to_seller(seller['user'], self.transact_amount, self.bitcoins, seller['transaction_id'],self.price_per_btc)
-                self.transfer_money_to_seller(seller=seller,seller_ka_paisa=seller_ask_total_money,mera_paisa=self.transact_amount)
+                self.transfer_money_to_seller( seller_data = seller_data ,seller_ka_paisa=seller_ask_total_money,
+                                              mera_paisa=self.transact_amount)
                 collection_account.update({'_id':ObjectId(self.userId)},{
                     '$push': {
                         'account_history.bought':{
@@ -204,31 +218,36 @@ class buyer:
                                 "transaction_id": self.transaction_id,
                                 'amount_paid' : self.transact_amount
                         }
-
                     },
                     '$inc': {
                         'bitcoins':self.bitcoins
                     }
                 })
                 print 'Transaction succesful completely'
+                if self.update == True:
+                    collection_buyer.remove({'transaction_id':self.transaction_id})
+                    del buyers_record['user']
+                    collection_account.update({'_id': ObjectId(self.userId)}, {'$set': {
+                        'pending_orders.buying': []
+                    }})
             else:
                 #jitna hai utna le lo
                 # self.bitcoins = self.bitcoins - seller['bitcoins']
-                transfered_money = seller['bitcoins']*self.price_per_btc
-                self.transfer_money_to_seller(seller=seller,seller_ka_paisa=seller_ask_total_money,mera_paisa=seller_ask_total_money)
+                transfered_money =  seller_data ['bitcoins']*self.price_per_btc
+                self.transfer_money_to_seller( seller_data = seller_data ,seller_ka_paisa=seller_ask_total_money,mera_paisa=seller_ask_total_money)
                 self.transact_amount -= seller_ask_total_money
                 self.bitcoins -= self.transact_amount * self.price_per_btc
-                print 'seller bitcoin: ' , seller['bitcoins']
+                print 'seller bitcoin: ' ,  seller_data ['bitcoins']
                 collection_account.update({'_id': ObjectId(self.userId)}, {'$push': {
                     'account_history.bought': {
                                 "price": self.price_per_btc,
-                                "bitcoins": seller['bitcoins'],
+                                "bitcoins":  seller_data ['bitcoins'],
                                 "time": self.st,
                                 "transaction_id": self.transaction_id,
                                 'amount_paid' : seller_ask_total_money
                     }},
                     '$inc': {
-                        'bitcoins' : float(seller['bitcoins'])
+                        'bitcoins' : float( seller_data ['bitcoins'])
                     }
                 })
                 self.market_processing_for_buyer()
@@ -239,47 +258,53 @@ class buyer:
 
 
 class seller:
-    def __init__(self, userId, price_per_btc, bitcoins):
-        self.userId = userId
+    def __init__(self, userId, price_per_btc, bitcoins,transactionId=None):
+        self.userId = str(userId)
         self.price_per_btc = float(price_per_btc)
         self.bitcoins = float(bitcoins)
-        self.transactionId = userId + create_key()
+        if transactionId == None:
+            self.transactionId = userId + create_key()
+            self.update = False
+        else:
+            self.transactionId = transactionId
+            self.update = True
         self.st = st()
 
-    def deduct_bitcoins(self):
-        collection_account.update({'_id':ObjectId(self.userId)},{'$inc':{'bitcoins':-self.bitcoins}})
+    def deduct_bitcoins(self,bitcoins):
+        collection_account.update({'_id':ObjectId(self.userId)},{'$inc':{'bitcoins':-bitcoins}})
 
-    def give_bitcoin(self,bitcoins,buyer,amount_paid):
-        buyer_acount_info = collection_account.find_one({'_id':ObjectId(buyer['user'])})
+    def give_bitcoin(self,bitcoins,buyer_data,amount_paid):
+        buyer_acount_info = collection_account.find_one({'_id':ObjectId(buyer_data['user'])})
         # buyer_acount_info['a']
-        bitcoins_remaning = buyer['bitcoins'] - bitcoins
-        print 'bitcoin remaning', bitcoins_remaning
+        bitcoins_remaning = buyer_data['bitcoins'] - bitcoins
+        # print 'bitcoin remaning', bitcoins_remaning
         ts = time.time()
         st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
         order_recived = {
             'price': self.price_per_btc,
             'bitcoins': bitcoins,
             'amount_paid' : amount_paid,
-            'transaction_id' : buyer['transaction_id'],
+            'transaction_id' : buyer_data['transaction_id'],
             'time' : st
         }
         print 'order recived', bitcoins
         print buyer_acount_info
         pending_orders = buyer_acount_info['pending_orders']
         for num,order in enumerate(pending_orders['buying']):
-            if order['transaction_id'] == buyer['transaction_id']:
+            if order['transaction_id'] == buyer_data['transaction_id']:
                 if bitcoins_remaning == 0 :
-                    pending_orders['buying'].pop(num)
+                    pending_orders['buying'] = []
                     print pending_orders
                 elif bitcoins_remaning > 0:
                     #collection_buyer reduce bitcoins
-                    order['bitcoins'] = bitcoins_remaning
+                    # order['bitcoins'] = bitcoins_remaning
                     order['deposit'] -= amount_paid
         print 'pending orders:', pending_orders
         print 'orders:', order_recived
-        collection_account.update({'_id':ObjectId(buyer['user'])},{
+        collection_account.update({'_id':ObjectId(buyer_data['user'])},{
             '$inc':{
-                'bitcoins' : bitcoins
+                'bitcoins' : bitcoins,
+                'account_balance' : -amount_paid
             },
             '$set': {
                 'pending_orders' : pending_orders
@@ -289,15 +314,15 @@ class seller:
             }
         })
         print 'yaha tak aaya'
-        print bitcoins_remaning, buyer['transaction_id']
+        # print bitcoins_remaning, buyer_data['transaction_id']
         if bitcoins_remaning == 0:
             print 'bitcoin uda diya'
-            collection_buyer.remove({'transaction_id':buyer['transaction_id']})
+            collection_buyer.remove({'transaction_id':buyer_data['transaction_id']})
             print 'removed'
         elif bitcoins_remaning > 0:
             print 'bitcoin ghata diya'
             print bitcoins, amount_paid
-            collection_buyer.update({'transaction_id':buyer['transaction_id']},{
+            collection_buyer.update({'transaction_id':buyer_data['transaction_id']},{
                 '$inc' : {
                     'deposit': -amount_paid
                 }
@@ -306,46 +331,73 @@ class seller:
         else:
             raise Exception('Bitcoin Is Negative')
 
+        self.deduct_bitcoins(bitcoins=bitcoins)
+
+        trade_history(bitcoins=bitcoins,price=self.price_per_btc,
+                      buyers_transaction_id=buyer_data['transaction_id'],sellers_transaction_id=self.transactionId)
+
 
 
 
     def market_processing_for_seller(self):
-        buyer = collection_buyer.find_one({'price':self.price_per_btc,
-                                           'user':{'$ne':self.userId}})
+        seller_pending_orders = collection_account.find_one({
+            '_id': ObjectId(self.userId)
+        },
+            {
+                'pending_orders' : 1
+            }
+        )
+
+
+        buyer_data = collection_buyer.find_one({'user':{'$ne':str(self.userId)},'price':self.price_per_btc})
+
         seller_record = {
             'user' : self.userId,
             'price' : self.price_per_btc,
             'bitcoins' : self.bitcoins,
             'transaction_id' : self.transactionId
         }
-        if buyer == None:
-            collection_seller.insert(seller_record)
-            del seller_record['user']
-            collection_account.update({'_id':ObjectId(self.userId)},{'$push':{'pending_orders.selling':seller_record}})
+        print buyer_data
+        if buyer_data == None:
+            if self.update == False:
+                collection_seller.insert(seller_record)
+                del seller_record['user']
+                collection_account.update({'_id':ObjectId(self.userId)},{'$push':{'pending_orders.selling':seller_record}})
+            else:
+                collection_seller.update({'transaction_id':self.transactionId},{
+                    '$set': seller_record
+                })
+                del seller_record['user']
+                collection_account.update({'_id': ObjectId(self.userId)},
+                                          {'$set': {'pending_orders.selling': [seller_record]}})
+
         else:
-            i_can_only_buy = buyer['deposit'] / self.price_per_btc
-            buyer['bitcoins'] = i_can_only_buy
-            if i_can_only_buy >= self.bitcoins:
+            this_user_can_buy = buyer_data['deposit'] / self.price_per_btc
+            buyer_data['bitcoins'] = this_user_can_buy
+            if this_user_can_buy >= self.bitcoins:
                 #give bitcoins
                 amount_paid = self.bitcoins * self.price_per_btc
-                self.give_bitcoin(bitcoins=self.bitcoins,buyer=buyer,amount_paid=amount_paid)
-                #take money
-                print amount_paid
+                self.give_bitcoin(bitcoins=self.bitcoins,buyer_data=buyer_data,amount_paid=amount_paid)
                 seller_record['amount_recieved'] = amount_paid
                 collection_account.update({'_id':ObjectId(self.userId)},{
-                    '$inc' : {'account_balance':amount_paid},
+                    '$inc' : {
+                        'account_balance':amount_paid
+                    },
                     '$push' : {
                         'account_history.sold' : seller_record
                     }
                 })
                 print 'poora ho gya'
+                if self.update == True:
+                    collection_account.update({'_id': ObjectId(self.userId)},
+                                              {'$set': {'pending_orders.selling': []}})
             else:
                 #jitna hai utna le lo
-                remaning_bitcoin = self.bitcoins - i_can_only_buy
-                amount_paid = i_can_only_buy * self.price_per_btc
-                self.give_bitcoin(bitcoins=i_can_only_buy, buyer=buyer, amount_paid=amount_paid)
+                remaning_bitcoin = self.bitcoins - this_user_can_buy
+                amount_paid = this_user_can_buy * self.price_per_btc
+                self.give_bitcoin(bitcoins=this_user_can_buy, buyer_data=buyer_data, amount_paid=amount_paid)
                 seller_record['amount_recieved'] = amount_paid
-                seller_record['bitcoins'] = buyer['bitcoins']
+                seller_record['bitcoins'] = buyer_data['bitcoins']
                 collection_account.update({'_id': ObjectId(self.userId)}, {
                     '$inc': {'account_balance': amount_paid},
                     '$push': {
@@ -356,9 +408,19 @@ class seller:
                 self.market_processing_for_seller()
                 print 'poora nahi huwa'
 
+
+
 def st():
     ts = time.time()
-    st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
+
+
+def update_buying_bid(account,price,deposit):
+    buying = account['pending_orders']['buying'][0]
+    buying['price'] = price
+    buying['deposit'] = deposit
+    collection_account.update({'_id':account['_id']},)
 
 
 if __name__ == '__main__':
@@ -368,29 +430,3 @@ if __name__ == '__main__':
     mohit.market_processing_for_seller()
     mohit = buyer("582ec573f99ce6291025082c",5000,transact_amount=8000,st=st)
     mohit.market_processing_for_buyer()
-
-    #
-    # mohit = seller(userId='582ec729f99ce62a1ac41ee4',price_per_btc=5000,bitcoins=0.8,st= st)
-    # collection_account.update({'_id':ObjectId(mohit.userId)},{'account_balance':0,
-    #                 'bitcoins':2.089,
-    #                 'pending_orders': {
-    #                     'selling': [],
-    #                     'buying': []
-    #                 },
-    #                 'account_history':{
-    #                     'sold':[],
-    #                     'bought':[]
-    #                 }})
-    # mohit = buyer("582ec573f99ce6291025082c",5000,transact_amount=8000,st=st)
-    # collection_account.update({'_id':ObjectId(mohit.userId)},{'account_balance':0,
-    #                 'bitcoins':2.089,
-    #                 'pending_orders': {
-    #                     'selling': [],
-    #                     'buying': []
-    #                 },
-    #                 'account_history':{
-    #                     'sold':[],
-    #                     'bought':[]
-    #                 }})
-    # collection_seller.drop()
-    # collection_buyer.drop()

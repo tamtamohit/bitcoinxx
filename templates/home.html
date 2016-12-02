@@ -6,7 +6,12 @@
         <div class="jumbotron" style="height:290px;">
             <h1>Welcome to BTCXIndia</h1>
             <p>India's leading Bitcoin Exchange. Sign up now to trade Bitcoin and INR in real time with express deposits and withdrawals.</p>
-            <p><a href="/register" class="btn btn-primary btn-lg">Sign Up</a></p>
+            {% if LoggedIN %}
+                <p><a href="/register" class="btn btn-primary btn-lg">Sign Up</a></p>
+            {% else %}
+                <p>Hi User</p>
+                <p>See your wallet <a href="/wallet">click here</a></p>
+            {% endif  %}
         </div>
     </div>
 {% endblock %}

@@ -1,15 +1,39 @@
 {% extends 'layout.html' %}
 
+{% block head%}
+<style>
+    section.wrapper {
+    min-width: 400px;
+    display : inline-block;
+    overflow: hidden;
+    }
+</style>
+{% endblock%}
 
 {% block content %}
     <div>
         <div class="account-balance">
-            <h3>Account Balance</h3>
-            <p class="k-spacing-right--large">         <i class="fa fa-inr"></i><span>     {{account['account_balance']}}</span></p>
+            <form action="/wallet" method="post">
+                <h3>Account Balance</h3>
+                <section class="wrapper">
+                    <p class="k-spacing-right--large">         <i class="fa fa-inr"></i><span>     {{account['account_balance']}}</span>
+                    <button name="submit" type="submit" class="btn btn-primary k-spacing-left--large" value="add_money">Add Money (<i class="fa fa-inr"></i>)</button>
+                    </p>
+                </section>
+            </form>
         </div>
         <div class="account-btc">
-            <h3>Bitcoin</h3>
-            <p class="k-spacing-right--small">         <i class="glyphicon glyphicon-btc"></i><span>    {{account['bitcoins']}}</span></p>
+            <form action="/wallet" method="post">
+                <h3>Bitcoin</h3>
+                <p class="k-spacing-right--small">         <i class="glyphicon glyphicon-btc"></i><span>    {{account['bitcoins']}}</span>
+                    <button type="submit" name="submit" class="btn btn-warning k-spacing-left--large" value="buy_bitcoins">Buy Bitcoins (<i class="glyphicon glyphicon-bitcoin"></i>)</button>
+                    {% if account['bitcoins'] > 0 %}
+                        <a href="/sellbtc"><button type="button" class="btn btn-success k-spacing-left--large">Sell Bitcoins (<i class="fa fa-inr"></i>)</button></a>
+                    {% endif %}
+                </p>
+            </form>
         </div>
     </div>
+
+
 {% endblock %}

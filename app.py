@@ -4,7 +4,7 @@ Flask API run file
 """
 from flask import Flask, render_template, request, redirect,flash, session
 from pymongo.errors import DuplicateKeyError
-from content_management import content
+from content_management import content, last_trade_price
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from market import buyer,seller
@@ -15,29 +15,30 @@ from market import buyer,seller
 TOPIC_DICT= content()
 
 app = Flask(__name__)
-print app
 app.secret_key = 'mohitdevops'
 mongo = PyMongo(app)
 
 
-
-
 @app.route('/')
 def firstpage():
-        return render_template('home.html',TOPIC_DICT=content())
+        return redirect('/home')
 
 @app.route('/home')
 def homepage():
     if not 'logged_in' in session:
-        session['logged_in'] = False
-
-    return render_template('home.html',TOPIC_DICT=content())
+        return render_template('home.html',TOPIC_DICT=content(),LoggedIN = True)
+    elif session['logged_in'] == False:
+        return render_template('home.html',TOPIC_DICT=content(),LoggedIN = True)
+    else:
+        return render_template('home.html',TOPIC_DICT=content(),LoggedIN = False)
 
 @app.route('/trade')
 def livemarket():
-    PENDING_ORDERS = mongo.db.account.find_one({'_id':ObjectId(session['_id'])},{'pending_orders':1,'_id':0})['pending_orders']
-    print PENDING_ORDERS
-    return render_template('trade.html',TOPIC_DICT=content(trade=True),PENDING_ORDERS=PENDING_ORDERS)
+    if session['logged_in'] == True:
+        PENDING_ORDERS = mongo.db.account.find_one({'_id':ObjectId(session['_id'])},{'pending_orders':1,'_id':0})['pending_orders']
+        return render_template('trade.html',TOPIC_DICT=content(trade=True),PENDING_ORDERS=PENDING_ORDERS)
+    else:
+        return redirect('/login')
 
 
 @app.route('/addmoney', methods=['GET','POST'])
@@ -48,7 +49,6 @@ def addbitcoin():
         else:
             return redirect('/login')
     if request.method == 'POST':
-        # print request.method
         if session['logged_in'] == True:
             if request.form['payment'] == 'Pay':
                 added_money = request.form.get('amount')
@@ -79,7 +79,7 @@ def login():
         session['_id'] = str(database_user['_id'])
 
         # flash('Loggedin Successfuly')
-        return redirect('/newlogin')
+        return redirect('/wallet')
 
     if request.method == 'GET':
         return render_template('login.html',TOPIC_DICT=content())
@@ -151,22 +151,56 @@ def confirm_email(token):
 
 @app.route('/sellbtc',methods=['GET','POST'])
 def sellbtc():
-    if request.method == 'GET':
-        person_account_details = mongo.db.account.find_one({'_id': ObjectId(session['_id'])})['bitcoins']
-        price_per_bitcoin = 50000
-        return render_template('sell_btc.html',TOPIC_DICT=content(),person_account_details=person_account_details,price_per_bitcoin=price_per_bitcoin)
-    if request.method == 'POST':
-        # dbs_sellers_market.insert({})
-        bitcoins =  request.form.get('btcSellingVolume')
-        price_per_bitcoin = request.form.get('btcSellingPrice')
-        new_sell = seller(userId=session['_id'],price_per_btc=price_per_bitcoin,bitcoins=bitcoins)
-        new_sell.deduct_bitcoins()
-        new_sell.market_processing_for_seller()
+    account = account_details()
+    if len(account['pending_orders']['selling']) == 0:
+        if request.method == 'GET':
+            # price_per_bitcoin = 50000
+            return render_template('sell_btc.html',TOPIC_DICT=content(trade=True),person_account_details=account['bitcoins'],price_per_bitcoin=last_trade_price())
+        if request.method == 'POST':
+            if request.form.get('btcSellingVolume') < account['bitcoins']:
+                return
+            bitcoins =  request.form.get('btcSellingVolume')
+            price_per_bitcoin = request.form.get('btcSellingPrice')
+            new_sell = seller(userId=session['_id'],price_per_btc=price_per_bitcoin,bitcoins=bitcoins)
+            new_sell.market_processing_for_seller()
 
-        return redirect('/wallet')
+            return redirect('/trade')
+    else:
+        return redirect('/updatesell')
 
 
-# def pending_orders():
+
+@app.route('/updatesell', methods=['GET', 'POST'])
+def update_sell_btc():
+    # price_per_bitcoin = 50000
+    account = account_details()
+    if len(account['pending_orders']['selling']) > 0:
+        if request.method == 'GET':
+            return render_template('update_sell.html',TOPIC_DICT=content(trade=True),
+                 person_account_details=account['bitcoins'], price_per_bitcoin = account['pending_orders']['selling'][0]['price'])
+        else:
+
+            if request.form.get('submit') == 'update':
+                if request.form.get('btcSellingVolume') < account['bitcoins']:
+                    return
+                price =  request.form.get('btcSellingPrice')
+                volume =  request.form.get('btcSellingVolume')
+                update_sell_bid(price=price,volume=volume,
+                                transactionId=account['pending_orders']['selling'][0]['transaction_id'])
+                return redirect('/trade')
+            elif request.form.get('submit') == 'cancel':
+                return redirect('/wallet')
+    else:
+        return redirect('/sellbtc')
+
+
+
+
+def update_sell_bid(price,volume,transactionId):
+    seller_updater = seller(userId=ObjectId(session['_id']),price_per_btc=price,
+                            bitcoins=volume,transactionId=transactionId)
+    seller_updater.market_processing_for_seller()
+
 
 
 
@@ -175,37 +209,70 @@ def sellbtc():
 def wallet():
     if not 'logged_in' in session:
         session['logged_in'] = False
-    if session['logged_in'] == True:
-        account = account_details()
-        return render_template('wallet.html',TOPIC_DICT=TOPIC_DICT,account=account)
+        return redirect('/login')
+    elif session['logged_in'] == True:
+        if request.method == 'GET':
+            account = account_details()
+            return render_template('wallet.html',TOPIC_DICT=content(trade=True),account=account)
+        else:
+            if request.form.get('submit') == 'add_money':
+                return redirect('/addmoney')
+            elif request.form.get('submit') == 'buy_bitcoins':
+                return redirect('/buybtc')
+            return redirect('/wallet')
     else:
         return redirect('/login')
 
 
 @app.route('/buybtc',methods=['GET','POST'])
 def buy_request():
-    price_per_bitcoin = 500000
     if request.method == 'GET':
         if session['logged_in'] == True:
-            account_balance = mongo.db.account.find_one({'_id': ObjectId(session['_id'])},{'account_balance':1})
-            return render_template('buy_btc.html',TOPIC_DICT=content(),price_per_bitcoin=price_per_bitcoin,account_balance=account_balance['account_balance'])
+            account = account_details()
+            if len(account['pending_orders']['buying']) == 0:
+                return render_template('buy_btc.html',TOPIC_DICT=content(trade=True),price_per_bitcoin=last_trade_price(),
+                                       account_balance=account['account_balance'])
+            else:
+                return redirect('/updatebuy')
         else:
             return redirect('/login')
     if request.method == 'POST':
+        #verify he is not making another transaction
         price_per_bitcoin = request.form.get('price')
         amount = request.form.get('amount')
         buying_request = buyer(userId=session['_id'],price_per_btc=price_per_bitcoin,transact_amount=amount)
-        buying_request.deduct_money()
         buying_request.market_processing_for_buyer()
 
-        # account_balance = mongo.db.account.find_one({'_id': ObjectId(session['_id'])}, {'account_balance': 1})
-        # new_balance = account_balance['account_balance'] - float(amount)
-        # mongo.db.account.update({'_id': ObjectId(session['_id'])}, {'$set': {'account_balance': new_balance}})
-        # ts = time.time()
-        # st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        # mongo.db.buyers_database.insert({'bitcoins':bitcoins,'price':price,'time':st,'user':session['_id']})
+        return redirect('/trade')
 
-        return redirect('/wallet')
+
+def update_buying_bid(transaction_id,price,deposit):
+    buying = buyer(userId=session['_id'],price_per_btc=price,
+                   transact_amount=deposit,transaction_id=transaction_id)
+    buying.market_processing_for_buyer()
+
+
+
+@app.route('/updatebuy',methods=['GET','POST'])
+def update_buy():
+    account = account_details()
+    if len(account['pending_orders']['buying']) == 0:
+        return redirect('/buybtc')
+    else:
+        if request.method == 'GET':
+            return render_template('update_buy.html', TOPIC_DICT=content(trade=True), price_per_bitcoin=account['pending_orders']['buying'][0]['price'],
+                               PENDING_ORDER=account['pending_orders']['buying'][0],account_balance=account['account_balance'])
+
+        if request.method == "POST":
+            if request.form.get('button') == 'cancel':
+                return redirect('/wallet')
+            elif request.form.get('button') == 'update':
+                price = request.form.get('price')
+                print price
+                deposit = request.form.get('amount')
+                update_buying_bid(transaction_id=account['pending_orders']['buying'][0]['transaction_id'],
+                                  price=float(price),deposit=float(deposit))
+                return redirect('/trade')
 
 
 
@@ -213,7 +280,9 @@ def buy_request():
 def account_details():
     return mongo.db.account.find_one({'_id':ObjectId(session['_id'])})
 
-
+@app.route('/charts',methods=['GET'])
+def chart():
+    return render_template('charts.html',TOPIC_DICT=content())
 
 
 

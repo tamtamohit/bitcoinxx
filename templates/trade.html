@@ -105,13 +105,13 @@
                     {% for orders in PENDING_ORDERS['selling'] %}
                         <tr>
                             <td>Selling</td>
-                            <td>{{orders['bitcoins']}} BTC @ <i class="fa fa-inr"></i> {{orders['price']}}</td>
-                        </tr>
+                            <td><a href="/updatesell">{{orders['bitcoins']}} BTC @ <i class="fa fa-inr"></i> {{orders['price']}}</a></td>
+                        </tr></a>
                     {% endfor %}
                     {% for orders in PENDING_ORDERS['buying'] %}
                         <tr>
                             <td>Buying</td>
-                            <td>{{orders['deposit'] / orders['price']}} BTC @ <i class="fa fa-inr"></i> {{orders['price']}}</td>
+                            <td><a href="/updatebuy">{{orders['deposit'] / orders['price']}} BTC @ <i class="fa fa-inr"></i> {{orders['price']}}</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>
